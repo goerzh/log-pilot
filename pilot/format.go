@@ -4,7 +4,7 @@ import "fmt"
 
 const (
 	regexp_nginx_error     = "^(?<time>[\\d{4}\\/\\d{2}\\/\\d{2} \\d{2}:\\d{2}:\\d{2}]*) \\[(?<log_level>(.*?))\\] (?<pid>(\\d*?))#(?<tid>(\\d*?)): \\*(?<connection_number>(\\d*?)) (?<msg>(.*?))$"
-	regexp_nginx_access    = "^(?<client_ip>[^ ]*) ([ -]*) \\[(?<time>[^\\]]*)\\] \"(?<method>[^ ]*) (?<uri>[^ ]*) (?<protocol>[^ ]*)\" (?<status>[^ ]*) (?<bytes_send>[^ ]*) [^ ]* \"(?<agent>.*)\""
+	regexp_nginx_access    = "^(?<client_ip>[^ ]*) ([ -]*) \\[(?<time>[^\\]]*)\\] \"(?<method>[^ ]*) (?<uri>[^ ]*) (?<protocol>[^ ]*)\" (?<status>[^ ]*) (?<bytes_send>[^ ]*) [^ ]* \"(?<agent>.*)\"$"
 	regexp_jvm_gc          = "^(?<time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}[+|-]\\d{4}*): (?<jvm_time_offset>[^ ]+): \\[(?<gc_type>.*) \\((?<gc_reason>.*)\\) (?<data>.*), (?<cost>.*) secs] \\[Times: user=(?<cpu_user_cost_time>.*) sys=(?<cpu_sys_cost_time>.*), real=(?<cpu_real_cost_time>.*) (?<cost_time_unit>.*)]$"
 	regexp_tomcat_access   = "^(?<client_ip>[^ ]*) \\[(?<time>[^\\]]*)\\] (?<protocol>[^ ]*) (?<method>[^ ]*) (?<uri>[^ ]*) (?<status>[^ ]*) (?<bytes_send>[^ ]*) (?<cost>[^ ]*) (?<uid>[^ ]*)$"
 	regexp_tomcat_catalina = "^(?<time>\\d{2}-[a-zA-Z]+-\\d{4} \\d{2}:\\d{2}:\\d{2}.\\d{3}*) (?<level>[^ ]*) \\[(?<thread>[^ ]*)\\] (?<method>[^ ]*)(?<message>.+)$"
@@ -79,7 +79,7 @@ func init() {
 		ret["pattern"] = regexp_nginx_error
 		return ret, nil
 	})
-	Register("nginx_error", func(info *LogInfoNode) (map[string]string, error) {
+	Register("nginx_access", func(info *LogInfoNode) (map[string]string, error) {
 		ret, err := simpleConverter([]string{})(info)
 		if err != nil {
 			return ret, err
