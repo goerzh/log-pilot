@@ -544,22 +544,26 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 		return nil, fmt.Errorf("parse tags for %s error: %v", name, err)
 	}
 
-	target := info.get("target")
+	index := info.get("index")
 	// add default index or topic
-	if _, ok := tagMap["index"]; !ok {
-		if target != "" {
-			tagMap["index"] = target
-		} else {
-			tagMap["index"] = name
-		}
+	if index != "" {
+		tagMap["index"] = index
+	} else {
+		tagMap["index"] = name
 	}
 
-	if _, ok := tagMap["topic"]; !ok {
-		if target != "" {
-			tagMap["topic"] = target
-		} else {
-			tagMap["topic"] = name
-		}
+	topic := info.get("topic")
+	if topic != "" {
+		tagMap["topic"] = topic
+	} else {
+		tagMap["topic"] = name
+	}
+
+	var target string
+	if index != "" {
+		target = index
+	} else {
+		target = name
 	}
 
 	// try to check the validity of the target topic for kafka
