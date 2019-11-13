@@ -5,7 +5,7 @@ import "fmt"
 const (
 	regexp_nginx_error     = "^(?<time>[\\d{4}\\/\\d{2}\\/\\d{2} \\d{2}:\\d{2}:\\d{2}]*) \\[(?<log_level>(.*?))\\] (?<pid>(\\d*?))#(?<tid>(\\d*?)): \\*(?<connection_number>(\\d*?)) (?<msg>(.*?))$"
 	regexp_nginx_access    = "^(?<client_ip>[^ ]*) ([ -]*) \\[(?<time>[^\\]]*)\\] \"(?<method>[^ ]*) (?<uri>[^ ]*) (?<protocol>[^ ]*)\" (?<status>[^ ]*) (?<bytes_send>[^ ]*) [^ ]* \"(?<agent>.*)\"$"
-	regexp_jvm_gc          = "^(?<time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}[+|-]\\d{4}*): (?<jvm_time_offset>[^ ]+): \\[(?<gc_type>.*) \\((?<gc_reason>.*)\\) (?<data>.*), (?<cost>.*) secs] \\[Times: user=(?<cpu_user_cost_time>.*) sys=(?<cpu_sys_cost_time>.*), real=(?<cpu_real_cost_time>.*) (?<cost_time_unit>.*)\\]"
+	regexp_jvm_gc          = "^(?<time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}[+|-]\\d{4}*): (?<jvm_time_offset>[^ ]+): \\[(?<gc_type>.*) \\((?<gc_reason>.*)\\) (?<data>.*), (?<cost>.*) secs\\] \\[Times: user=(?<cpu_user_cost_time>.*) sys=(?<cpu_sys_cost_time>.*), real=(?<cpu_real_cost_time>.*) (?<cost_time_unit>.*)\\]"
 	regexp_tomcat_access   = "^(?<client_ip>[^ ]*) \\[(?<time>[^\\]]*)\\] (?<protocol>[^ ]*) (?<method>[^ ]*) (?<uri>[^ ]*) (?<status>[^ ]*) (?<bytes_send>[^ ]*) (?<cost>[^ ]*) (?<uid>[^ ]*)$"
 	regexp_tomcat_catalina = "^(?<time>\\d{2}-[a-zA-Z]+-\\d{4} \\d{2}:\\d{2}:\\d{2}.\\d{3}*) (?<level>[^ ]*) \\[(?<thread>[^ ]*)\\] (?<method>[^ ]*)(?<message>.+)$"
 )
