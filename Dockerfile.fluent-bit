@@ -1,0 +1,25 @@
+FROM goerzh/debian-base-amd64-golang:0.3.1 as builder
+
+ENV PILOT_DIR /go/src/github.com/AliyunContainerService/log-pilot
+ARG GOOS=linux
+ARG GOARCH=amd64
+RUN set -ex
+WORKDIR $PILOT_DIR
+COPY . $PILOT_DIR
+RUN go install 
+
+FROM goerzh/fluent-bit-debug:v0.13
+
+RUN apt-get update \
+    && apt-get install -y python
+
+COPY --from=builder /go/bin/log-pilot /pilot/pilot
+COPY assets/entrypoint assets/fluent-bit/ assets/healthz /pilot/
+
+RUN chmod +x /pilot/pilot /pilot/entrypoint /pilot/healthz
+
+HEALTHCHECK CMD /pilot/healthz
+
+WORKDIR /pilot/
+ENV PILOT_TYPE=fluent-bit
+ENTRYPOINT ["/pilot/entrypoint"]

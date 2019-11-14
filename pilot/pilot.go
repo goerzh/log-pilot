@@ -30,9 +30,11 @@ aliyun.log: /var/log/hello.log[:json][;/var/log/abc/def.log[:txt]]
 
 // Global variables
 const (
-	ENV_PILOT_LOG_PREFIX     = "PILOT_LOG_PREFIX"
-	ENV_PILOT_CREATE_SYMLINK = "PILOT_CREATE_SYMLINK"
-	ENV_LOGGING_OUTPUT       = "LOGGING_OUTPUT"
+	ENV_PILOT_LOG_PREFIX       = "PILOT_LOG_PREFIX"
+	ENV_PILOT_CREATE_SYMLINK   = "PILOT_CREATE_SYMLINK"
+	ENV_LOGGING_OUTPUT         = "LOGGING_OUTPUT"
+	ENV_LOGGING_KAFKA_ENDPOINT = "KAFKA_BROKERS"
+	ENV_LOGGING_ES_ENDPOINT    = "ELASTICSEARCH_HOSTS"
 
 	ENV_SERVICE_LOGS_TEMPL   = "%s_logs_"
 	LABEL_SERVICE_LOGS_TEMPL = "%s.logs."
@@ -583,8 +585,8 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 
 	//特殊处理regex
 	if format.value == "regexp" {
-		format.value = fmt.Sprintf("/%s/", formatConfig["pattern"])
-		delete(formatConfig, "pattern")
+		formatConfig["pattern"] = fmt.Sprintf("/%s/", formatConfig["pattern"])
+		//	delete(formatConfig, "pattern")
 	}
 
 	if path == "stdout" {
@@ -634,7 +636,7 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 
 	if formatConfig["time_key"] == "" {
 		//cfg.EstimateTime = true
-		cfg.FormatConfig["time_key"] = "time"
+		//cfg.FormatConfig["time_key"] = "time"
 	}
 	return cfg, nil
 }
@@ -737,12 +739,20 @@ func (p *Pilot) render(containerId string, container map[string]string, configLi
 		output = os.Getenv(ENV_LOGGING_OUTPUT)
 	}
 
+	var endpoints string
+	if output == "kafka" {
+		endpoints = os.Getenv(ENV_LOGGING_KAFKA_ENDPOINT)
+	} else if output == "elasticsearch" {
+		endpoints = os.Getenv(ENV_LOGGING_ES_ENDPOINT)
+	}
+
 	var buf bytes.Buffer
 	context := map[string]interface{}{
 		"containerId": containerId,
 		"configList":  configList,
 		"container":   container,
 		"output":      output,
+		"endpoints":   endpoints,
 	}
 	if err := p.templ.Execute(&buf, context); err != nil {
 		return "", err
