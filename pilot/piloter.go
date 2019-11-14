@@ -9,8 +9,9 @@ import (
 const (
 	ENV_PILOT_TYPE = "PILOT_TYPE"
 
-	PILOT_FILEBEAT = "filebeat"
-	PILOT_FLUENTD  = "fluentd"
+	PILOT_FILEBEAT   = "filebeat"
+	PILOT_FLUENTD    = "fluentd"
+	PILOT_FLUENT_BIT = "fluent-bit"
 )
 
 // Piloter interface for piloter
@@ -35,6 +36,9 @@ func NewPiloter(baseDir string) (Piloter, error) {
 	}
 	if os.Getenv(ENV_PILOT_TYPE) == PILOT_FLUENTD {
 		return NewFluentdPiloter()
+	}
+	if os.Getenv(ENV_PILOT_TYPE) == PILOT_FLUENT_BIT {
+		return NewFluentdBitPiloter()
 	}
 	return nil, fmt.Errorf("InvalidPilotType")
 }

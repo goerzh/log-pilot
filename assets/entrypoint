@@ -8,6 +8,7 @@ import subprocess
 base = '/host'
 pilot_fluentd = "fluentd"
 pilot_filebeat = "filebeat"
+pilot_fluent_bit = "fluent-bit"
 ENV_PILOT_TYPE = "PILOT_TYPE"
 
 
@@ -37,8 +38,10 @@ def run():
     pilot_type = os.environ.get(ENV_PILOT_TYPE)
     if pilot_filebeat == pilot_type:
         tpl_config = "/pilot/filebeat.tpl"
-    else:
+    elif pilot_fluentd == pilot_type:
         tpl_config = "/pilot/fluentd.tpl"
+    else:
+        tpl_config = "/pilot/fluent-bit.tpl"
 
     os.execve('/pilot/dlv', ['/pilot/dlv', "--listen=:40000", "--headless=true", "--api-version=2", "exec", '/pilot/pilot', '--' ,'-template', tpl_config, '-base', base, '-log-level', 'debug'],
               os.environ)
@@ -49,13 +52,15 @@ def config():
     if pilot_filebeat == pilot_type:
         print "start log-pilot:", pilot_filebeat
         subprocess.check_call(['/pilot/config.filebeat'])
-    else:
+    elif pilot_fluentd == pilot_type:
         print "start log-pilot:", pilot_fluentd
         subprocess.check_call(['/pilot/config.fluentd'])
 
 
 if __name__ == '__main__':
+    print("entry begin")
     config()
     # FIXME need SYS_ADMIN capability
     cleanup()
     run()
+    print("entry end")

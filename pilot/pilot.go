@@ -30,9 +30,11 @@ aliyun.log: /var/log/hello.log[:json][;/var/log/abc/def.log[:txt]]
 
 // Global variables
 const (
-	ENV_PILOT_LOG_PREFIX     = "PILOT_LOG_PREFIX"
-	ENV_PILOT_CREATE_SYMLINK = "PILOT_CREATE_SYMLINK"
-	ENV_LOGGING_OUTPUT       = "LOGGING_OUTPUT"
+	ENV_PILOT_LOG_PREFIX       = "PILOT_LOG_PREFIX"
+	ENV_PILOT_CREATE_SYMLINK   = "PILOT_CREATE_SYMLINK"
+	ENV_LOGGING_OUTPUT         = "LOGGING_OUTPUT"
+	ENV_LOGGING_KAFKA_ENDPOINT = "KAFKA_BROKERS"
+	ENV_LOGGING_ES_ENDPOINT    = "ELASTICSEARCH_HOSTS"
 
 	ENV_SERVICE_LOGS_TEMPL   = "%s_logs_"
 	LABEL_SERVICE_LOGS_TEMPL = "%s.logs."
@@ -544,22 +546,26 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 		return nil, fmt.Errorf("parse tags for %s error: %v", name, err)
 	}
 
-	target := info.get("target")
+	index := info.get("index")
 	// add default index or topic
-	if _, ok := tagMap["index"]; !ok {
-		if target != "" {
-			tagMap["index"] = target
-		} else {
-			tagMap["index"] = name
-		}
+	if index != "" {
+		tagMap["index"] = index
+	} else {
+		tagMap["index"] = name
 	}
 
-	if _, ok := tagMap["topic"]; !ok {
-		if target != "" {
-			tagMap["topic"] = target
-		} else {
-			tagMap["topic"] = name
-		}
+	topic := info.get("topic")
+	if topic != "" {
+		tagMap["topic"] = topic
+	} else {
+		tagMap["topic"] = name
+	}
+
+	var target string
+	if index != "" {
+		target = index
+	} else {
+		target = name
 	}
 
 	// try to check the validity of the target topic for kafka
@@ -579,8 +585,8 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 
 	//特殊处理regex
 	if format.value == "regexp" {
-		format.value = fmt.Sprintf("/%s/", formatConfig["pattern"])
-		delete(formatConfig, "pattern")
+		formatConfig["pattern"] = fmt.Sprintf("/%s/", formatConfig["pattern"])
+		//	delete(formatConfig, "pattern")
 	}
 
 	if path == "stdout" {
@@ -630,7 +636,7 @@ func (p *Pilot) parseLogConfig(name string, info *LogInfoNode, jsonLogPath strin
 
 	if formatConfig["time_key"] == "" {
 		//cfg.EstimateTime = true
-		cfg.FormatConfig["time_key"] = "time"
+		//cfg.FormatConfig["time_key"] = "time"
 	}
 	return cfg, nil
 }
@@ -733,12 +739,20 @@ func (p *Pilot) render(containerId string, container map[string]string, configLi
 		output = os.Getenv(ENV_LOGGING_OUTPUT)
 	}
 
+	var endpoints string
+	if output == "kafka" {
+		endpoints = os.Getenv(ENV_LOGGING_KAFKA_ENDPOINT)
+	} else if output == "elasticsearch" {
+		endpoints = os.Getenv(ENV_LOGGING_ES_ENDPOINT)
+	}
+
 	var buf bytes.Buffer
 	context := map[string]interface{}{
 		"containerId": containerId,
 		"configList":  configList,
 		"container":   container,
 		"output":      output,
+		"endpoints":   endpoints,
 	}
 	if err := p.templ.Execute(&buf, context); err != nil {
 		return "", err
