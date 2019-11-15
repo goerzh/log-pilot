@@ -26,7 +26,7 @@ type FluentdBitPiloter struct {
 
 // NewFluentdPiloter returns a FluentdPiloter instance
 func NewFluentdBitPiloter() (Piloter, error) {
-	return &FluentdPiloter{
+	return &FluentdBitPiloter{
 		name: PILOT_FLUENT_BIT,
 	}, nil
 }
@@ -34,7 +34,7 @@ func NewFluentdBitPiloter() (Piloter, error) {
 // Start starting and watching fluentd process
 func (p *FluentdBitPiloter) Start() error {
 	if fluentBit != nil {
-		pid := fluentd.Process.Pid
+		pid := fluentBit.Process.Pid
 		log.Infof("fluent-bit started, pid: %v", pid)
 		return fmt.Errorf(ERR_ALREADY_STARTED)
 	}
@@ -45,7 +45,7 @@ func (p *FluentdBitPiloter) Start() error {
 		"-c", FLUENTDBIT_CONF_FILE)
 	fluentBit.Stderr = os.Stderr
 	fluentBit.Stdout = os.Stdout
-	err := fluentd.Start()
+	err := fluentBit.Start()
 	if err != nil {
 		log.Errorf("fluent-bit start fail: %v", err)
 	}
@@ -62,7 +62,7 @@ func (p *FluentdBitPiloter) Start() error {
 
 		// try to restart fluentd
 		log.Warningf("fluent-bit exited and try to restart")
-		fluentd = nil
+		fluentBit = nil
 		p.Start()
 	}()
 	return err
