@@ -1,20 +1,35 @@
 FROM goerzh/debian-base-amd64-golang:0.3.1 as builder
 
+RUN apt-get update \
+    && apt-get dist-upgrade -y \
+    && apt-get install -y \
+       build-essential \
+       cmake \
+       make \
+       git \
+       libsystemd-dev \
+       libssl1.0-dev
+
 ENV PILOT_DIR /go/src/github.com/AliyunContainerService/log-pilot
 ARG GOOS=linux
 ARG GOARCH=amd64
 RUN set -ex
 WORKDIR $PILOT_DIR
 COPY . $PILOT_DIR
-RUN go install 
+RUN go install -gcflags "all=-N -l"
+
+ # Compile Delve
+ RUN go get -u github.com/derekparker/delve/cmd/dlv
 
 FROM goerzh/fluent-bit-debug:v0.13
+EXPOSE 40000
 
 RUN apt-get update \
     && apt-get install -y python
 
 COPY --from=builder /go/bin/log-pilot /pilot/pilot
 COPY assets/entrypoint assets/fluent-bit/ assets/healthz /pilot/
+COPY --from=builder /go/bin/dlv /pilot/dlv
 
 RUN chmod +x /pilot/pilot /pilot/entrypoint /pilot/healthz
 
